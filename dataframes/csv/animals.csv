@@ -1,2 +1,3 @@
-,Name,q0
-0,shark,False
+,name,q0,q1
+0,shark,0,1
+1,monkey,1,0
