@@ -1,3 +1,8 @@
-,name,q0,q1
-0,shark,0,1
-1,monkey,1,0
+,name,q0,q1,q2
+0,shark,0.0,1.0,1.0
+1,monkey,1.0,0.0,
+2,sharkman,1.0,1.0,
+3,fullnan,,,
+4,q1_nan,1.0,,
+5,whale,0.0,1.0,1.0
+6,barracuda,0.0,1.0,0.0
