@@ -10,14 +10,13 @@ class Logic_module:
         self._data_module = data_module
 
     def start_execution(self):
-
-        #move the next 2 lines to ui module later
+        '''Starts the game execution
+        '''
         self._ui_module.present_text('Think of an animal, then judge the facts about it with yes or no:')
 
         name, answers_dict, number_of_valids = self._discover_animal_with_simplified_order()
 
         if(name):
-            #move nexts lines to ui module later
             answer = self._ui_module.get_delimited_input_with_text('Is the animal a ' + name + '? (y/n)', ('y','n','q'))
             if answer == 'q':
                 return
@@ -32,6 +31,13 @@ class Logic_module:
             self._animal_not_found(answers_dict)
 
     def _ambiguous_animal_found(self, answers_dict: dict, number_of_valids: int):
+        '''Resolves case when more than one animal have the same values, are the only ones remaining and there is no more questions to differenciate then.
+
+        Args:
+            answers_dict (dict): a dict with the mapping of values to questions id who set the dataframe to this position
+            number_of_valids (int): the number of animals with identical values left
+
+        '''
         name_aux = self._ui_module.get_free_input_with_text\
                         ('There are ' + str(number_of_valids) + ' animals in my database that matches yours description, what is the name of the one you are thinking?').lower()
         if(name_aux == 'q'):
@@ -47,11 +53,24 @@ class Logic_module:
 
 
     def _animal_found(self, name: str, answers_dict: dict):
-            answers_dict['name'] = name;
-            self._data_module.update_animal_with_dict(answers_dict)
-            self._data_module.save_animals_to_disk()
+        '''Resolves the case when the animal was found, or by process of elimination or by input of the user
+
+        Args:
+            name (str): the name of the animal
+            answers_dict (dict): a dict with the mapping of values to questions id who set the dataframe to this position
+
+        '''
+        answers_dict['name'] = name;
+        self._data_module.update_animal_with_dict(answers_dict)
+        self._data_module.save_animals_to_disk()
 
     def _animal_not_found(self, answers_dict:dict):
+        '''Resolves the case when the animal could not be found by process of elimination
+
+        Args:
+            answers_dict (dict): a dict with the mapping of values to questions id who set the dataframe to this position
+
+        '''
         name_aux = self._ui_module.get_free_input_with_text\
                         ('Sorry the animal you are thinking is not on my database or I dont have enough information on it to give a definitive answer, what is the animal?').lower()
         if(name_aux == 'q'):
@@ -65,10 +84,22 @@ class Logic_module:
 
 
     def get_sup_modules_types(self):
-        return(self._ui_module.mdl_type, self._data_module.mdl_type)
+        '''Resturn the suport modules types associated with the logic module
+
+        Returns:
+            tuple of str : contains id of the ui and data module
+        '''
+        return (self._ui_module.mdl_type, self._data_module.mdl_type)
 
     def _discover_animal_with_simplified_order(self) -> (str,dict,int):
+        '''Tries to discover the user's animal by process of elimination using a simplified ordering by weight
+        The ordering only uses the weights of the questions calculated using the full dataframe, so only the first question for sure at it's best position
 
+        Returns:
+            str: the name of the animal chosen by the user, only returned if only one value with complete information is found at the end of the elimination process
+            dict: a dict with the mapping of values to questions id who set the dataframe to this position
+            int: the number of animals that the dataframe has complete information that can be the one chosen by the user
+        '''
         answers_dict = {}
         for question_index in range(self._data_module.get_number_of_questions()):
 
