@@ -1,6 +1,8 @@
 ,id,text,order,weight
-0,q1,has a fin,1,1.0
-1,q0,survives outside of water,0,1.0
+0,q3,is a reptile,3,0.33333333333333337
+1,q4,has a blowhole on the top of his head,4,0.0
 2,q2,is a mammal,2,0.6666666666666667
-3,q3,is a reptile,3,0.33333333333333337
-4,q4,has a blowhole on the top of his head,4,0.0
+3,q1,has a fin,1,1.0
+4,q0,survives outside of water,0,1.0
+5,q5,has stripes,5,0.0
+6,q6,feeds on carrion,6,0.0

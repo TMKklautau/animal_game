@@ -178,7 +178,6 @@ class Csv_Data_module(Data_module):
         if(not self._questions_df.loc[self._questions_df.text == text].empty):
             return self._questions_df.loc[self._questions_df.text == text, 'id'].item()
         else:
-            #the id management can cause problems if a question is removed, need to think of something better
             aux_id = 'q'+str(self._questions_df.order.max()+1)
             self._questions_df = self._questions_df.append({'id':aux_id, 'text':text, 'order':self._questions_df.order.max()+1, 'weight':0}, ignore_index=True)
             self._animals_df[aux_id] = np.nan

@@ -47,10 +47,13 @@ class Logic_module:
             return
         id_aux = self._data_module.add_question_with_text(text_aux)
         answers_dict[id_aux] = 1
-        self._animal_found(name_aux, answers_dict)
+        if(self._data_module.is_animal_present(name_aux)):
+            self._animal_found(name_aux, answers_dict)
+        else:
+            answers_dict['name'] = name_aux
+            self._data_module.add_animal_with_dict(answers_dict)
+            self._data_module.save_animals_to_disk()
         self._data_module.save_questions_to_disk()
-        self._data_module.save_animals_to_disk()
-
 
     def _animal_found(self, name: str, answers_dict: dict):
         '''Resolves the case when the animal was found, or by process of elimination or by input of the user
