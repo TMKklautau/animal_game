@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import os
 
 class Data_module:
     '''Base data manipulation module'''
@@ -137,11 +138,11 @@ class Csv_Data_module(Data_module):
 
     def __init__(self):
         super().__init__()
-        self._animals_df = pd.read_csv('./dataframes/csv/animals.csv', index_col=0)
-        self._questions_df = pd.read_csv('./dataframes/csv/questions.csv', index_col=0)
+        self._animals_df = pd.read_csv(os.path.join(os.path.dirname(__file__),'dataframes/csv/animals.csv'), index_col=0)
+        self._questions_df = pd.read_csv(os.path.join(os.path.dirname(__file__),'dataframes/csv/questions.csv'), index_col=0)
 
     def reset_animals_to_disk_version(self):
-        self._animals_df = pd.read_csv('./dataframes/csv/animals.csv', index_col=0)
+        self._animals_df = pd.read_csv(os.path.join(os.path.dirname(__file__),'dataframes/csv/animals.csv'), index_col=0)
 
     def is_animal_present(self, name: str) -> bool:
         return not (self._animals_df.loc[self._animals_df.name == name].empty)
@@ -184,10 +185,10 @@ class Csv_Data_module(Data_module):
             return aux_id
 
     def save_animals_to_disk(self):
-        self._animals_df.to_csv('./dataframes/csv/animals.csv')
+        self._animals_df.to_csv(os.path.join(os.path.dirname(__file__),'dataframes/csv/animals.csv'))
 
     def save_questions_to_disk(self):
-        self._questions_df.to_csv('./dataframes/csv/questions.csv')
+        self._questions_df.to_csv(os.path.join(os.path.dirname(__file__),'dataframes/csv/questions.csv'))
 
     def calculate_questions_weights(self):
         for row in self._questions_df.index:
