@@ -19,16 +19,26 @@ def main(args):
     _data_module = data.Csv_Data_module()
     _logic_module = logic.Logic_module(_ui_module, _data_module)
 
+    simplified_search = 0
+
     if('-uw' in args): #update weights
         _data_module.calculate_questions_weights()
+        _data_module.save_questions_to_disk()
+        simplified_search = 1
     if('-rnd' in args): #randomize questions
         _data_module.randomize_questions()
+        simplified_search = 1
     if('-pd' in args): #print data, used only for debugging goes against code modularity
         print(_data_module._animals_df)
         print(_data_module._questions_df)
+        print(_data_module._bst_df)
+    if('-rt' in args):
+        _data_module.build_new_bst()
+    if('-ss' in args):
+        simplified_search = 1
     if('-sg' in args): #skip game
         return
-    _logic_module.start_execution()
+    _logic_module.start_execution(simplified_search)
 
 if __name__ == '__main__':
     main(sys.argv[1:])

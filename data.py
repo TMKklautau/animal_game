@@ -15,6 +15,9 @@ class Data_module:
         '''
         pass
 
+    def reset_questions_to_disk_version(self):
+        pass
+
     def is_animal_present(self, name:str) -> bool:
         '''Verifies if an animal's name is present on the database
 
@@ -132,6 +135,18 @@ class Data_module:
         '''
         pass
 
+    def build_new_bst(self, depth:int):
+        pass
+
+    def get_question_id_list(self) -> list:
+        return None
+
+    def get_node_from_index(self, index:int) -> dict:
+        return None
+
+    def get_question_index_from_id(self, question_id:str) -> int:
+        return None
+
 class Csv_Data_module(Data_module):
     '''Csv using pandas data module'''
     mdl_type:str = 'Csv'
@@ -140,9 +155,13 @@ class Csv_Data_module(Data_module):
         super().__init__()
         self._animals_df = pd.read_csv(os.path.join(os.path.dirname(__file__),'dataframes/csv/animals.csv'), index_col=0)
         self._questions_df = pd.read_csv(os.path.join(os.path.dirname(__file__),'dataframes/csv/questions.csv'), index_col=0)
+        self._bst_df = pd.read_csv(os.path.join(os.path.dirname(__file__),'dataframes/csv/bst.csv'), index_col=0)
 
     def reset_animals_to_disk_version(self):
         self._animals_df = pd.read_csv(os.path.join(os.path.dirname(__file__),'dataframes/csv/animals.csv'), index_col=0)
+
+    def reset_questions_to_disk_version(self):
+        self._questions_df = pd.read_csv(os.path.join(os.path.dirname(__file__),'dataframes/csv/questions.csv'), index_col=0)
 
     def is_animal_present(self, name: str) -> bool:
         return not (self._animals_df.loc[self._animals_df.name == name].empty)
@@ -191,11 +210,74 @@ class Csv_Data_module(Data_module):
         self._questions_df.to_csv(os.path.join(os.path.dirname(__file__),'dataframes/csv/questions.csv'))
 
     def calculate_questions_weights(self):
-        for row in self._questions_df.index:
-            aux = self._animals_df.loc[:,self._questions_df.loc[row].id]
-            self._questions_df.loc[row,'weight'] = (1 - abs(len(aux.loc[aux == 1]) - len(aux.loc[aux == 0]))/len(aux.dropna())) * (len(aux.dropna())/len(aux))
-            self._questions_df = self._questions_df.sort_values('weight', ascending=False).reset_index(drop=True)
-            self.save_questions_to_disk()
+        self._calculate_questions_weights_from_snapshot(self._questions_df, self._animals_df)
+        self._questions_df = self._sort_questions_by_weight(self._questions_df)
+
+    def _calculate_questions_weights_from_snapshot(self, aux_questions_df:pd.DataFrame, aux_animals_df:pd.DataFrame):
+        for row in aux_questions_df.index:
+            aux = aux_animals_df.loc[:,aux_questions_df.loc[row].id]
+            if(len(aux.dropna()) > 0):
+                aux_questions_df.loc[row,'weight'] = (1 - abs(len(aux.loc[aux == 1]) - len(aux.loc[aux == 0]))/len(aux.dropna())) * (len(aux.dropna())/len(aux))
+            else:
+                aux_questions_df.loc[row,'weight'] = 0
+
+    def _sort_questions_by_weight(self, aux_questions_df:pd.DataFrame) -> pd.DataFrame:
+        return aux_questions_df.sort_values('weight', ascending=False).reset_index(drop=True)
 
     def randomize_questions(self):
         self._questions_df = self._questions_df.sample(frac=1).reset_index(drop=True)
+
+    def build_new_bst(self, depth:int = -1):
+
+        if((depth < 0) | (depth > len(self._questions_df))):
+            depth = len(self._questions_df)
+
+        self.calculate_questions_weights()
+        self._bst_df = self._bst_df[0:0]
+        self._bst_df = self._bst_df.append({'parent':-1,'y_child':-1,'n_child':-1,'question':self._questions_df.loc[0,'id']}, ignore_index=True)
+
+        aux_animals_snap = self._animals_df.copy()
+        aux_questions_snap = self._questions_df.copy()
+
+        aux_animals_snap_0 = aux_animals_snap[~(aux_animals_snap[aux_questions_snap.loc[0,'id']] == 0)]
+        aux_animals_snap_1 = aux_animals_snap[~(aux_animals_snap[aux_questions_snap.loc[0,'id']] == 1)]
+        aux_questions_snap = aux_questions_snap[1:]
+
+        self._bst_df.loc[0,'y_child'] =  self._build_new_bst_recursive(depth, 1, 0, aux_questions_snap, aux_animals_snap_1)
+        self._bst_df.loc[0,'n_child'] =  self._build_new_bst_recursive(depth, 1, 0, aux_questions_snap, aux_animals_snap_0)
+
+        self._bst_df.to_csv(os.path.join(os.path.dirname(__file__),'dataframes/csv/bst.csv'))
+
+    def _build_new_bst_recursive(self, max_depth:int, current_depth:int, parent_index:int, arg_questions_df_snapshot:pd.DataFrame, arg_animals_df_snapshot:pd.DataFrame) -> int:
+
+        if(max_depth<=current_depth):
+            return -1
+
+        aux_questions_snap = arg_questions_df_snapshot.copy()
+        aux_animals_snap = arg_animals_df_snapshot.copy()
+
+        self._calculate_questions_weights_from_snapshot(aux_questions_snap, aux_animals_snap)
+        aux_questions_snap = self._sort_questions_by_weight(aux_questions_snap)
+
+        my_index = len(self._bst_df)
+
+        self._bst_df = self._bst_df.append({'parent':parent_index, 'y_child':-1, 'n_child':-1, 'question':aux_questions_snap.loc[0,'id']}, ignore_index=True)
+
+        aux_animals_snap_0 = aux_animals_snap[~(aux_animals_snap[aux_questions_snap.loc[0,'id']] == 0)]
+        aux_animals_snap_1 = aux_animals_snap[~(aux_animals_snap[aux_questions_snap.loc[0,'id']] == 1)]
+        aux_questions_snap = aux_questions_snap[1:]
+
+        self._bst_df.loc[my_index,'y_child'] =  self._build_new_bst_recursive(max_depth, current_depth+1, my_index, aux_questions_snap, aux_animals_snap_1)
+        self._bst_df.loc[my_index,'n_child'] =  self._build_new_bst_recursive(max_depth, current_depth+1, my_index, aux_questions_snap, aux_animals_snap_0)
+
+        return my_index
+
+    def get_question_id_list(self) -> list:
+        return self._questions_df.id.to_list()
+
+    def get_node_from_index(self, index:int) -> dict:
+        return self._bst_df.loc[index].to_dict()
+
+    def get_question_index_from_id(self, question_id:str) -> int:
+        return self._questions_df[self._questions_df.id == question_id].index[0]
+

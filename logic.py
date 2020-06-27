@@ -9,12 +9,16 @@ class Logic_module:
         self._ui_module = ui_module
         self._data_module = data_module
 
-    def start_execution(self):
+    def start_execution(self, type_of_search: int = 0):
         '''Starts the game execution
         '''
         self._ui_module.present_text('Think of an animal, then judge the facts about it with yes or no:')
 
-        name, answers_dict, number_of_valids = self._discover_animal_with_simplified_order()
+        if(type_of_search == 0):
+            name, answers_dict, number_of_valids = self._discover_animal_with_tree_order()
+        else:
+            name, answers_dict, number_of_valids = self._discover_animal_with_simplified_order()
+
 
         if(name):
             answer = self._ui_module.get_delimited_input_with_text('Is the animal a ' + name + '? (y/n)', ('y','n','q'))
@@ -122,3 +126,53 @@ class Logic_module:
 
         self._data_module.reset_animals_to_disk_version()
         return None, answers_dict, number_of_valids;
+
+    def _discover_animal_with_tree_order(self) -> (str,dict,int):
+        question_id_list = self._data_module.get_question_id_list()
+        answers_dict = {}
+        node_index = 0
+        node = {}
+
+        while(node_index >=0):
+            node = self._data_module.get_node_from_index(node_index)
+            question_index = self._data_module.get_question_index_from_id(node['question'])
+
+            answer = self._ui_module.get_delimited_input_with_text('Your animal ' + self._data_module.get_question_text_by_index(question_index) + '. (y/n)', ('y','n','q'))
+            if answer == 'q':
+                self._data_module.reset_animals_to_disk_version()
+                return None, None, None;
+            else:
+                self._data_module.remove_animals_by_question_index_value(question_index, 0 if answer == 'y' else 1)
+                answers_dict[self._data_module.get_question_id_by_index(question_index)] = 1 if answer == 'y' else 0
+
+            number_of_valids, name = self._data_module.check_only_one_valid_animal_by_question_index(question_index)
+
+            if(number_of_valids == 1):
+                self._data_module.reset_animals_to_disk_version()
+                return name, answers_dict, number_of_valids;
+
+            question_id_list.remove(node['question'])
+            node_index = node['y_child'] if answer == 'y' else node['n_child']
+
+
+        for question_id_remaining in question_id_list:
+            question_index = self._data_module.get_question_index_from_id(question_id_remaining)
+
+            answer = self._ui_module.get_delimited_input_with_text('Your animal ' + self._data_module.get_question_text_by_index(question_index) + '. (y/n)', ('y','n','q'))
+            if answer == 'q':
+                self._data_module.reset_animals_to_disk_version()
+                return None, None, None;
+            else:
+                self._data_module.remove_animals_by_question_index_value(question_index, 0 if answer == 'y' else 1)
+                answers_dict[self._data_module.get_question_id_by_index(question_index)] = 1 if answer == 'y' else 0
+
+            number_of_valids, name = self._data_module.check_only_one_valid_animal_by_question_index(question_index)
+
+            if(number_of_valids == 1):
+                self._data_module.reset_animals_to_disk_version()
+                return name, answers_dict, number_of_valids;
+
+        self._data_module.reset_animals_to_disk_version()
+        return None, answers_dict, number_of_valids;
+
+
