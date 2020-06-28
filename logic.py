@@ -127,7 +127,20 @@ class Logic_module:
         self._data_module.reset_animals_to_disk_version()
         return None, answers_dict, number_of_valids;
 
-    def _discover_animal_with_tree_order(self) -> (str,dict,int):
+    def _discover_animal_with_tree_order(self, num_questions_until_guess: int = -1) -> (str,dict,int):
+        '''Tries to discover the user's animal by process of elimination using a binary search tree ordered by weight
+        The ordering only uses the weights of the questions calculated for each snapshot of the dataframe on the disk
+        After the tree path ends if the animal was not found and not every question was asked it will ask every remaining question or until the number of questions reaches its passed limit
+
+        Args:
+            num_questions_until_guess (int) = -1 : max number of questions to be asked before giving up, if negative will ask all questions on memory
+
+        Returns:
+            str: the name of the animal chosen by the user, only returned if only one value with complete information is found at the end of the elimination process
+            dict: a dict with the mapping of values to questions id who set the dataframe to this position
+            int: the number of animals that the dataframe has complete information that can be the one chosen by the user
+        '''
+
         question_id_list = self._data_module.get_question_id_list()
         answers_dict = {}
         node_index = 0
@@ -154,6 +167,11 @@ class Logic_module:
             question_id_list.remove(node['question'])
             node_index = node['y_child'] if answer == 'y' else node['n_child']
 
+            if(num_questions_until_guess == 0):
+                return None, answers_dict, 0
+            else:
+                num_questions_until_guess -= 1
+
 
         for question_id_remaining in question_id_list:
             question_index = self._data_module.get_question_index_from_id(question_id_remaining)
@@ -171,6 +189,11 @@ class Logic_module:
             if(number_of_valids == 1):
                 self._data_module.reset_animals_to_disk_version()
                 return name, answers_dict, number_of_valids;
+
+            if(num_questions_until_guess == 0):
+                return None, answers_dict, 0
+            else:
+                num_questions_until_guess -= 1
 
         self._data_module.reset_animals_to_disk_version()
         return None, answers_dict, number_of_valids;

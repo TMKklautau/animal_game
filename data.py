@@ -135,16 +135,46 @@ class Data_module:
         '''
         pass
 
-    def build_new_bst(self, depth:int):
+    def build_new_bst(self, depth:int = -1):
+        '''Builds new binary search tree for preprocessing the best question order with the data on dik
+
+        Args:
+            depth (int) = -1: max depth on the tree, if negative the tree indexes all possibilities
+
+        '''
         pass
 
     def get_question_id_list(self) -> list:
+        '''Returns a list with all ids on the questions database
+
+        Returns:
+            List: list of ids
+
+        '''
         return None
 
     def get_node_from_index(self, index:int) -> dict:
+        '''Returns a dict with the node information associated with the passed index
+
+        Args:
+            index (int): index of the node to return
+
+        Returns:
+            dict: node information
+
+        '''
         return None
 
     def get_question_index_from_id(self, question_id:str) -> int:
+        '''Returns the index of a question with the passed id
+
+        Args:
+            question_id (str): id to search
+
+        Returns:
+            int :index of the question found
+
+        '''
         return None
 
 class Csv_Data_module(Data_module):
